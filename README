@@ -1,0 +1,52 @@
+Example usage:
+--------------
+
+// Create database object.
+$db = new MySQL('myHost', 'myUser', 'myPassword', 'myDatabase');
+
+// Fetch a single value.
+$rowCount = $db->fetchOne('
+	SELECT COUNT(*)
+	FROM `some_table`;
+');
+printf('Row count: %s', $rowCount);
+
+// Fetch a single row using a single placeholder.
+$rawSql = 'SELECT firstname, lastname, age	FROM `persons` WHERE id = ?;'
+$id = 123;
+$db->bindParam(1, $id);
+$sql = $db->prepare($rawSql);
+
+$row = $db->fetchRow($sql);
+print_r($row);
+
+// Fetch multiple rows using multiple placeholders.
+$firstname = 'Joe';
+$minimumAge = 30;
+$rawSql = 'SELECT firstname, lastname, age FROM `persons` WHERE firstname = ? AND age > ?;'
+$db->bindParam(1, $firstname);
+$db->bindParam(2, $minimumAge);
+$sql = $db->prepare($rawSql);
+$rows = $db->fetchAll($sql);
+print_r($rows);
+
+// Insert a row using placeholders with auto-escaping.
+$rawSql = 'INSERT INTO `persons` (firstname, lastname, age) VALUES (?, ?, ?);'
+$db->bindParam(1, $firstname);
+$db->bindParam(2, $lastname);
+$db->bindParam(3, $age);
+$sql = $db->prepare($rawSql);
+$db->query($sql);
+
+// Insert a row using the SQL-free method with an associative array.
+$db->insert('persons', array(
+	'firstname' => $firstname,
+	'lastname' => $lastname,
+	'age' => $age
+));
+
+// Update a row using associative array
+$db->update('persons', array('age' => 123), array('id' => 1));
+
+// Delete a row.
+$db->delete('persons', array('age' => 18));
