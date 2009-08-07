@@ -4,7 +4,7 @@
  * This class is an object-oriented wrapper to PHP's native mysql_* functions. The API is inspired
  * from JDBC and PDO. There are some helper methods to make developer's work easy.
  *
- * @compatibility >= PHP4
+ * @compatibility >= PHP5.2
  * @author Mohammed Irfan Shaikh
  * @mail mirfan@semaphore-software.com
  * @version 0.2
@@ -14,10 +14,10 @@ class MySQL {
     /**
      * Private variables
      */
-    var $link; // MySQL connection link
-	var $resource; //MySQL result resource
-	var $parameters; // array for storing bind parameters
-	var $errStr; // error string
+    private $link; // MySQL connection link
+	private $resource; //MySQL result resource
+	private $parameters; // array for storing bind parameters
+	private $errStr; // error string
 
     /**
      * Checks connection and database selection
@@ -28,7 +28,7 @@ class MySQL {
      * @param String database password
      * @param String database name
      */
-    function MySQL($hostname, $username, $password, $database) {
+    public function __construct($hostname, $username, $password, $database) {
 		$this->link = 0;
 		$this->resource = 0;
 		$this->parameters = array();
@@ -48,7 +48,7 @@ class MySQL {
      * @access private
      * @param String message
 	 */
-    function halt($msg) {
+    private function halt($msg) {
 		trigger_error(sprintf("Database error : %s<br>%s\n", $this->errStr, $msg), E_USER_ERROR);
 	}
 
@@ -58,7 +58,7 @@ class MySQL {
      * @param String value
      * @return String escaped value
 	 */
-    function quote($str) {
+    public function quote($str) {
 		if (get_magic_quotes_gpc())
 			$str = stripslashes($str);
 		$str = mysql_real_escape_string($str, $this->link);
@@ -74,8 +74,9 @@ class MySQL {
      * @param Integer index of field in the SQL string
      * @param String value of field
 	 */
-    function bindParam($index, $val) {
+    public function bindParam($index, $val) {
 		$this->parameters[$index] = $this->quote($val);
+		return $this; // for allowing method chaining
 	}
 
 	/**
@@ -84,7 +85,7 @@ class MySQL {
      * @param String raw SQL string with '?'s
      * @return String SQL string with '?' replaced with actual field value
 	 */
-    function prepare($rawSql) {
+    public function prepare($rawSql) {
 		$sql_parts = explode('?', $rawSql);
 		$sql = $sql_parts[0];
 		for ($i = 1, $end = count($sql_parts); $i < $end; $i++) {
@@ -98,7 +99,7 @@ class MySQL {
      * @access public
      * @param String prepared SQL string
 	 */
-    function query($sql) {
+    public function query($sql) {
 		$sql = chop($sql);
 
 		$this->resource = mysql_query($sql, $this->link);
@@ -116,7 +117,7 @@ class MySQL {
      * @param String prepared SQL string
      * @return Mixed field value
 	 */
-    function fetchOne($sql) {
+    public function fetchOne($sql) {
 		$this->query($sql);
 		$result = mysql_fetch_row($this->resource);
 		return $result[0] ? $result[0] : 0;
@@ -128,7 +129,7 @@ class MySQL {
      * @param String prepared SQL string
      * @return Mixed array of field
      */
-    function fetchCol($sql) {
+    public function fetchCol($sql) {
 		$this->query(sql);
 
 		$col = array();
@@ -146,7 +147,7 @@ class MySQL {
      * @param String prepared SQL string
      * @return Mixed associative array of record
      */
-    function fetchRow($sql) {
+    public function fetchRow($sql) {
 		$this->query($sql);
 		$result = mysql_fetch_assoc($this->resource);
 		return $result ? $result : null;
@@ -158,7 +159,7 @@ class MySQL {
      * @param String prepared SQL string
      * @return Mixed array of rows
      */
-    function fetchAll($sql) {
+    public function fetchAll($sql) {
 		$this->query($sql);
 
 		$results = array();
@@ -177,7 +178,7 @@ class MySQL {
      * @param Mixed array of field values
      * @return Integer id of last inserted record
      */
-    function insert($table, $values) {
+    public function insert($table, $values) {
 		$this->query(sprintf(
 			'INSERT INTO `%s` (%s) VALUES (%s);',
 			$table,
@@ -205,7 +206,7 @@ class MySQL {
      * @param Mixed associative array of field name and value to build a where string
      * @return Integer # of updated records
      */
-    function update($table, $set, $where) {
+    public function update($table, $set, $where) {
 		$fields = array_keys($set);
 		$vals = array_map(
 			array($this, 'quote'),
@@ -239,7 +240,7 @@ class MySQL {
      * @param Mixed associative array of field name and value to build a where string
      * @return Integer # of updated records
      */
-	function delete($table, $where) {
+	public function delete($table, $where) {
 		$whereField = array_keys($where);
 		$whereVal = $this->quote($where[$whereField[0]]);
 
@@ -256,7 +257,7 @@ class MySQL {
      * @access public
      * @return Integer # of columns
      */
-	function numCols() {
+	public function numCols() {
 		return mysql_num_fields($this->resource);
 	}
 
@@ -265,7 +266,7 @@ class MySQL {
      * @access public
      * @return Integer # of rows
      */
-	function numRows() {
+	public function numRows() {
 		return mysql_num_rows($this->resource);
 	}
 
@@ -274,7 +275,7 @@ class MySQL {
      * @access public
      * @return Integer id of last inserted record
      */
-	function insertID() {
+	public function insertID() {
 		return mysql_insert_id($this->link);
 	}
 
@@ -283,7 +284,7 @@ class MySQL {
      * @access public
      * @return Integer # of updated records
      */
-	function affectedRows() {
+	public function affectedRows() {
 		return mysql_affected_rows($this->link);
 	}
 }
